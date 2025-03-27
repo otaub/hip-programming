@@ -3,8 +3,11 @@
 
 #define HIP_ERRCHK(result) hip_errchk(result, __FILE__, __LINE__)
 static inline void hip_errchk(hipError_t result, const char *file, int line) {
-    static_assert(false, "TODO: remove me and implement the error checking. "
-                         "(Hint: check the slides)");
+    if (result != hipSuccess)
+    {
+        printf("\n\n%s in %s at line %d\n", hipGetErrorString(result), file, line);
+        exit(EXIT_FAILURE);
+    }
 }
 
 int main() {
@@ -12,7 +15,8 @@ int main() {
     // function above, and correct it
     int count = 0;
     HIP_ERRCHK(hipGetDeviceCount(&count));
-    HIP_ERRCHK(hipSetDevice(count));
+    //printf("%d", count);
+    HIP_ERRCHK(hipSetDevice(count-1));
 
     int device = 0;
     HIP_ERRCHK(hipGetDevice(&device));
