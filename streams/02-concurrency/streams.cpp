@@ -93,8 +93,15 @@ void case_1(hipEvent_t *start_event, hipEvent_t *stop_event, hipStream_t *stream
   hipMemcpy(d_a, a, n_total * sizeof(float), hipMemcpyHostToDevice);
 
   // Distribute kernel for 'n_streams' streams, and record each stream's timing
-  #error loop over 'n_stream' and split the case 0 kernel for 4 kernel calls (one for each stream)
-  #error each stream should handle 'n_total / n_streams' of work
+  //#error loop over 'n_stream' and split the case 0 kernel for 4 kernel calls (one for each stream)
+  for(int i; i<n_streams, i++)
+  {
+      hipEventRecord(start_event[i], stream[i]);
+      //HIP_ERRCHK(hipMemcpyAsync(d_a + i*stream_size, a + i*stream_size, stream_size * sizeof(float), hipMemcpyHostToDevice, stream[i]));
+      kernel<<<gridsize, blocksize>>>(d_a + i*stream_size, stream_size, stream[i]);
+      hipEventRecord(stop_event[i], stream[i]);
+  }
+  // #error each stream should handle 'n_total / n_streams' of work
 
   // Copy data back to host
   hipMemcpy(a, d_a, n_total * sizeof(float), hipMemcpyDeviceToHost);
@@ -122,18 +129,29 @@ void case_2(hipEvent_t *start_event, hipEvent_t *stop_event, hipStream_t *stream
 
   // Record the start event for the total time
   #error record a start event for the total timing
+  hipEventRecord(start_event[n_stream], 0)
 
   // Distribute memcopies and the kernel for 'n_streams' streams, and record each stream's timing
-  #error Loop over 'n_stream'.
-  #error Split the data copy from host to device into 'n_stream' asynchronous memcopies, 
-  #error one memcopy for each stream (make sure the memcopies are split evenly).
-	#error Launch the kernel for each stream similarly to Case 1.
-	#error Split the data copy from device to host into 'n_stream' asynchronous memcopies,
-  #error one for each stream (make sure the memcopies are split evenly).
-  #error Ie, looping over {async copy, kernel, async copy}.
+  //#error Loop over 'n_stream'.
+  for(int i=0; i<n_streams; i++)
+  {
+      hipEventRecord(start_event[i], stream[i]);
+  //#error Split the data copy from host to device into 'n_stream' asynchronous memcopies, 
+  //#error one memcopy for each stream (make sure the memcopies are split evenly).
+      hipMemcpyAsync(d_a + i*stream_size, a + i*stream_size, stream_bytes, hipMemcpyHostToDevice, stream[i]);
+	  // #error Launch the kernel for each stream similarly to Case 1.
+      kernel<<<gridsize, blocksize>>>(d_a + i*stream_size, stream_size, stream[i]);
+
+	//#error Split the data copy from device to host into 'n_stream' asynchronous memcopies,
+  //#error one for each stream (make sure the memcopies are split evenly).
+  //#error Ie, looping over {async copy, kernel, async copy}.
+      hipMemcpyAsync(a i*stream_size, d_a + i*stream_size, stream_bytes, hipMemcpyDeviceToHost, stream[i]);
+
+      hipEventRecord(stop_event[i], stream[i]);
+  }
 
   // Record the stop event for the total time
-  #error record a stop event for the total timing
+  hipEventRecord(stop_event[n_streams], 0);
 
   // Synchronize with the events and capture timings between start_events and stop_events
   float timing[n_streams + 1];
@@ -188,7 +206,11 @@ int main(){
 
   // Create streams
   hipStream_t stream[n_streams];
-  #error create `n_stream` streams using the above `hipStream_t` array
+  //#error create `n_stream` streams using the above `hipStream_t` array
+  for(int i=0; i<n_streams; i++)
+  {
+      hipSreamCreate(&stream[i];
+  }
 
   // Initialize memory and run case 0
   memset(a, 0, bytes);
@@ -213,7 +235,11 @@ int main(){
   }
 
   // Destroy Streams
-  #error destroy `n_stream` streams
+  // #error destroy `n_stream` streams
+  for(int i=0; i<n_streams; i++)
+  {
+      hipStreamDestroy(&stream[i]);
+  }
 
   // Free host memory
   #if USE_PINNED_HOST_MEM == 1
