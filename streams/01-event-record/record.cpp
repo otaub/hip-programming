@@ -18,6 +18,7 @@ __global__ void kernel(int *d_a, int n_total)
 int main(){
   
   // Problem size
+  // vary ~ 22 - 26
   constexpr int n_total = 1<<22;
 
   // Device grid sizes
@@ -31,27 +32,43 @@ int main(){
   hipMalloc((void**)&d_a, bytes);   // device pinned
 
   // Create events
-  #error create the required timing events here
+  //#error create the required timing events here
+  hipEvent_t start_kernel_event;
+  hipEvent_t d2h_copy_event;
+  hipEvent_t stop_event;
+  hipEventCreate(&start_kernel_event);
+  hipEventCreate(&d2h_copy_event);
+  hipEventCreate(&stop_event);
 
   // Create stream
   hipStream_t stream;
   hipStreamCreate(&stream);
 
   // Start timed GPU kernel and device-to-host copy
-  #error record the events somewhere across the below lines of code
-  #error such that you can get the timing for the kernel, the
-  #error memory copy, and the total combined time of these
+  // #error record the events somewhere across the below lines of code
+  // #error such that you can get the timing for the kernel, the
+  // #error memory copy, and the total combined time of these
   auto start_kernel_clock = chrono_clock;
   kernel<<<gridsize, blocksize, 0, stream>>>(d_a, n_total);
+  hipEventRecord(start_kernel_event, stream);
 
   auto start_d2h_clock = chrono_clock;
   hipMemcpyAsync(a, d_a, bytes, hipMemcpyDeviceToHost, stream);
+  hipEventRecord(d2h_copy_event, stream);
 
   auto stop_clock = chrono_clock;
   hipStreamSynchronize(stream);
+  hipEventRecord(stop_event);
 
   // Exctract elapsed timings from event recordings
-  #error get the elapsed time from the timing events
+  // #error get the elapsed time from the timing events
+  hipEventSynchronize(stop_event);
+  float kernel_event_time;
+  float d2h_event_time;
+  float total_event_time;
+  hipEventElapsedTime(&kernel_event_time, start_kernel_event, d2h_copy_event);
+  hipEventElapsedTime(&d2h_event_time, d2h_copy_event, stop_event);
+  hipEventElapsedTime(&total_event_time, start_kernel_event, stop_event);
 
   // Check that the results are right
   int error = 0;
@@ -68,19 +85,25 @@ int main(){
 
   // Print event timings
   printf("Event timings:\n");
-  #error print event timings here
+  // #error print event timings here
+  printf(" %.3f ms - kernel\n", kernel_event_time);
+  printf(" %.3f ms - device to host copy\n", d2h_event_time);
+  printf(" %.3f ms - total time\n", total_event_time);
 
   // Print clock timings
   printf("clock_t timings:\n");
-  printf("  %.3f ms - kernel\n", 1e3 * (double)get_mus(start_d2h_clock - start_kernel_clock));
-  printf("  %.3f ms - device to host copy\n", 1e3 * (double)get_mus(stop_clock - start_d2h_clock));
-  printf("  %.3f ms - total time\n", 1e3 * (double)get_mus(stop_clock - start_kernel_clock));
+  printf("  %.3f ms - kernel\n", 1e-3 * (double)get_mus(start_d2h_clock - start_kernel_clock));
+  printf("  %.3f ms - device to host copy\n", 1e-3 * (double)get_mus(stop_clock - start_d2h_clock));
+  printf("  %.3f ms - total time\n", 1e-3 * (double)get_mus(stop_clock - start_kernel_clock));
 
   // Destroy Stream
   hipStreamDestroy(stream);
 
   // Destroy events
-  #error destroy events here
+  // #error destroy events here
+  hipEventDestroy(start_kernel_event);
+  hipEventDestroy(d2h_copy_event);
+  hipEventDestroy(stop_event);
 
   // Deallocations
   hipFree(d_a); // Device
