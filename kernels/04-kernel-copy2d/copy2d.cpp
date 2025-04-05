@@ -26,9 +26,14 @@ __global__ void copy2d(int num_cols, int num_rows, double* dst, double* src) {
     // col must be < number of columns
 
     // We're computing 1D index from a 2D index and copying from src to dst
-    const size_t index = row * num_cols + col;
-    //dst[index] = src[index];
-    dst[index] = 4.;
+    for(int i=row; i<num_rows; i+=blockDim.x)
+    {
+        for(int j=col; j<num_cols; j+=blockDim.y)
+        {
+            const size_t index = i * num_cols + j;
+            dst[index] = src[index];
+        }
+    }
 }
 
 int main() {
