@@ -134,7 +134,7 @@ hipError_t hipStreamDestroy ( hipStream_t stream )
 
 ```cpp
 hipStream_t stream[3];
-for (int i = 0; i<3; ++i) {
+for (int i = 0; i<3; ++i) 
   hipStreamCreate(&stream[i]);
 
 for (int i = 0; i < 3; ++i) {
@@ -291,7 +291,7 @@ __global__ void reverse(double *d_a) {
     s_a[tid] = d_a[tid];              /* each thread fills one entry */
     __syncthreads();                  /* all threads in a block must reach this point before 
                                          any thread in that block is allowed to continue. */
-    d_a[tid] = s_a[BLOCKSIZE-tid];    /* safe to write out array in reverse order */
+    d_a[tid] = s_a[BLOCKSIZE-tid-1];    /* safe to write out array in reverse order */
 }
 ```
 
