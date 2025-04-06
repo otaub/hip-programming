@@ -63,12 +63,12 @@ Link to [slides](https://csc-training.github.io/hip-programming/)
 - [x] [Hello world](kernels/01-hello-world)
 - [x] [Error checking](kernels/02-error-checking)
 - [x] [Kernel saxpy](kernels/03-kernel-saxpy)
-- [ ] [Kernel copy2d](kernels/04-kernel-copy2d)
+- [x] [Kernel copy2d](kernels/04-kernel-copy2d)
 
 ### Streams, events, and synchronization
 
 - [x] [Understanding asynchronity using events](streams/01-event-record)
-- [ ] [Investigating streams and events](streams/02-concurrency)
+- [x] [Investigating streams and events](streams/02-concurrency)
 
 ### Memory allocations, access, and unified memory
 
