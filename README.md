@@ -74,7 +74,7 @@ Link to [slides](https://csc-training.github.io/hip-programming/)
 
 - [x] [Memory management strategies](memory/01-prefetch)
 - [x] [The stream-ordered memory allocator and memory pools](memory/02-mempools)
-- [ ] [Unified memory and structs](memory/03-struct)
+- [x] [Unified memory and structs](memory/03-struct)
 
 ### Fortran and HIP
 

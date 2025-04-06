@@ -93,44 +93,59 @@ void runDeviceUnifiedMem()
   hipKernel<<<grid, block, 0, 0>>>(ex);
   printf("\nDevice (UnifiedMem):\n");
 
-  hipFree(ex->x); hipFree(ex->idx); hipFree(ex);
+  HIP_CHECK(hipFree(ex->x)); HIP_CHECK(hipFree(ex->idx)); HIP_CHECK(hipFree(ex));
 }
 
-#if 0
 /* Create the device struct (needed for explicit memory management) */
 Example* createDeviceExample(Example *ex)
 {
-  #error Allocate device struct
+  //#error Allocate device struct
+  Example *d_ex;
+  HIP_CHECK(hipMalloc((void**) &d_ex, sizeof(Example)));
 
-  #error Allocate device struct members
+  //#error Allocate device struct members
+  HIP_CHECK(hipMalloc((void**)&(d_ex->x), sizeof(float) * ex->size));
+  HIP_CHECK(hipMalloc((void**)&(d_ex->idx), sizeof(int) * ex->size));
 
-  #error Copy arrays pointed by the struct members from host to device
+  //#error Copy arrays pointed by the struct members from host to device
+  HIP_CHECK(hipMemcpy(d_ex->x, ex->x, sizeof(float) * ex->size, hipMemcpyHostToDevice));
+  HIP_CHECK(hipMemcpy(d_ex->idx, ex->idx, sizeof(int) * ex->size, hipMemcpyHostToDevice));
 
-  #error Copy struct members from host to device
+  //#error Copy struct members from host to device
+  HIP_CHECK(hipMemcpy(&(d_ex->size), &(ex->size), sizeof(int), hipMemcpyHostToDevice));
 
-  #error Return device struct
+  //#error Return device struct
+  return d_ex;
 }
-#endif
 
-#if 0
 /* Free the device struct (needed for explicit memory management) */
 void freeDeviceExample(Example *d_ex)
 {
-  #error Copy struct members (pointers) from device to host
+  //#error Copy struct members (pointers) from device to host
+  float* d_x;
+  int* d_idx;
+  HIP_CHECK(hipMemcpy(&d_x, &(d_ex->x), sizeof(float*), hipMemcpyDeviceToHost));
+  HIP_CHECK(hipMemcpy(&d_idx, &(d_ex->idx), sizeof(int*), hipMemcpyDeviceToHost));
 
-  #error Free device struct members
+  //#error Free device struct members
+  HIP_CHECK(hipFree(d_x));
+  HIP_CHECK(hipFree(d_idx));
 
-  #error Free device struct
+  //#error Free device struct
+  HIP_CHECK(hipFree(d_ex));
 }
-#endif
 
-#if 0
 /* Run on device using Explicit memory management */
 void runDeviceExplicitMem()
 {
-  #error Allocate host struct
+  //#error Allocate host struct
+  Example *ex;
+  ex = (Example*)malloc(sizeof(Example));
+  ex->size = 10;
 
-  #error Allocate host struct members
+  //#error Allocate host struct members
+  ex->x = (float*)malloc(ex->size * sizeof(float));
+  ex->idx=(int*)malloc(ex->size * sizeof(int));
 
   // Initialize host struct
   for(int i = 0; i < ex->size; i++)
@@ -142,20 +157,25 @@ void runDeviceExplicitMem()
   // Allocate device struct and copy values from host to device
   Example *d_ex = createDeviceExample(ex);
 
-  #error Print struct values from device by calling hipKernel()
+  dim3 grid(1,1,1);
+  dim3 block(16,16,1);
+  //#error Print struct values from device by calling hipKernel()
+  hipKernel<<<grid, block, 0, 0>>>(d_ex);
   printf("\nDevice (ExplicitMem):\n");
 
   // Free device struct
   freeDeviceExample(d_ex);
 
-  #error Free host struct
+  //#error Free host struct
+  free(ex->x);
+  free(ex->idx);
+  free(ex);
 }
-#endif
 
 /* The main function */
 int main(int argc, char* argv[])
 {
   runHost();
   runDeviceUnifiedMem();
-  /* runDeviceExplicitMem(); */
+  runDeviceExplicitMem();
 }
