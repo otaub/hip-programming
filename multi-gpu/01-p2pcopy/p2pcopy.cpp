@@ -9,19 +9,29 @@ void copyP2P(int p2p, int gpu0, int gpu1, int* dA_0, int* dA_1, int size) {
     // Enable peer access for GPUs?
     if (p2p)
     {
-        // TODO: Enable peer access for GPU 0 and GPU 1
+        //       Enable peer access for GPU 0 and GPU 1
+        hipSetDevice(gpu0);
+        hipDeviceEnablePeerAccess(gpu1, 0);
+        hipSetDevice(gpu1);
+        hipDeviceEnablePeerAccess(gpu0, 0);
     }
 
     // Do a dummy copy without timing to remove the impact of the first one
-    // TODO: Copy dA_1 on device 1 to dA_0 on device 0
+    //       Copy dA_1 on device 1 to dA_0 on device 0
+    hipMemcpyPeer((void *)dA_1, 1, (void *)dA_0, 0, size);
 
     // Do a series of timed P2P memory copies
     int N = 10;
     clock_t tStart = clock();
-    // TODO: Copy dA_1 on device 1 to dA_0 on device 0, repeat for N times to
+    //       Copy dA_1 on device 1 to dA_0 on device 0, repeat for N times to
     //       get timings
-    // TODO: After the memory copies, remember to synchronize the stream
+    for(int i=0; i<N; i++)
+    {
+        hipMemcpyPeer((void *)dA_1, 1, (void *)dA_0, 0, size);
+    }
+    //       After the memory copies, remember to synchronize the stream
     //       before stopping the clock
+    hipStreamSynchronize(0);
     clock_t tStop = clock();
 
     // Calcute time and bandwith
@@ -30,7 +40,11 @@ void copyP2P(int p2p, int gpu0, int gpu1, int* dA_0, int* dA_1, int size) {
 
     // Disable peer access for GPUs?
     if (p2p) {
-        // TODO: Disable peer access for GPU 0 and GPU 1
+        //       Disable peer access for GPU 0 and GPU 1
+        hipSetDevice(gpu0);
+        hipDeviceDisablePeerAccess(gpu1);
+        hipSetDevice(gpu1);
+        hipDeviceDisablePeerAccess(gpu0);
         printf("P2P enabled - Bandwith: %.3f (GB/s), Time: %.3f s\n",
                 bandwidth, time_s);
     } else {
@@ -64,8 +78,11 @@ int main(int argc, char *argv[])
     // Check peer accessibility between GPUs 0 and 1
     int peerAccess01;
     int peerAccess10;
-    // TODO: Check for peer to peer accessibility from device 0 to 1
+    //       Check for peer to peer accessibility from device 0 to 1
     //       and from 1 to 0
+    hipDeviceCanAccessPeer(&peerAccess01, gpu0, gpu1);
+    hipDeviceCanAccessPeer(&peerAccess10, gpu1, gpu0);
+
     printf("hipDeviceCanAccessPeer: %d (GPU %d to GPU %d)\n",
             peerAccess01, gpu0, gpu1);
     printf("hipDeviceCanAccessPeer: %d (GPU %d to GPU %d)\n",
