@@ -90,7 +90,7 @@ Link to [slides](https://csc-training.github.io/hip-programming/)
 ### Multi-GPU programming and HIP+MPI
 
 - [x] [Peer to peer device access](multi-gpu/01-p2pcopy)
-- [ ] [Vector sum on two GPUs without MPI](multi-gpu/02-vector-sum)
+- [x] [Vector sum on two GPUs without MPI](multi-gpu/02-vector-sum)
 - [ ] [Ping-pong with multiple GPUs and MPI](multi-gpu/03-mpi)
 
 ### Porting to HIP
